@@ -1,76 +1,115 @@
 /**
-* @author rrubalcava@odoe.net (Rene Rubalcava)
-*/
-/*global window document console define setTimeout Error*/
+ * @author odoe@odoe.net (Rene Rubalcava)
+ */
+/*global define, setTimeout, Error*/
+/*jshint laxcomma:true*/
 (function() {
-    'use strict';
-    define([
-           'require',
-           'esri/layers/GraphicsLayer',
-           'esri/graphic',
-           'esri/symbols/SimpleMarkerSymbol',
-           'dojo/fx',
-           'dojo/_base/fx',
-           'dojo/fx/easing',
-           'dojo/aspect',
-           'dojo/_base/Color'
-    ], function (require, GraphicsLayer, Graphic, SimpleMarkerSymbol, fx, coreFx, easing, aspect, Color) {
-        var TouchWidget = function (options) {
-            if (!options.map) {
-                throw new Error('Must provide a map object to use TouchWidget');
-            }
-            this.map = options.map;
-            this.delay = options.delay || 500;
-            this.touchLayer = new GraphicsLayer();
-            if (this.map.loaded) {
-                this.map.addLayer(this.touchLayer);
-            } else {
-                var self = this;
-                require(['dojo/on'], function(on) {
-                    on.once(self.map, 'load', function() {
-                        self.map.addLayer(self.touchLayer);
-                    });
-                });
-            }
+  'use strict';
+
+  define([
+    'esri/layers/GraphicsLayer',
+    'esri/graphic',
+    'esri/symbols/SimpleMarkerSymbol',
+    'dojo/Evented',
+    'dojo/on',
+    'dojo/fx',
+    'dojo/_base/fx',
+    'dojo/fx/easing',
+    'dojo/aspect',
+    'dojo/_base/Color',
+    'dojo/_base/declare',
+    'dojo/_base/lang',
+    'dijit/_WidgetBase',
+    'dijit/a11yclick'
+  ], function (GraphicsLayer, Graphic, SimpleMarkerSymbol, Evented, on, fx, coreFx, easing, aspect, Color, declare, lang, _WidgetBase, a11yclick) {
+
+    return declare('widgets/touch/TouchWidget', [_WidgetBase], {
+
+      options: {},
+
+      constructor: function(options) {
+        declare.safeMixin(this, options);
+
+        this.set('map', this.options.map);
+        this.set('delay', this.settings.delay || 500);
+        this._symInner = new SimpleMarkerSymbol(
+          SimpleMarkerSymbol.STYLE_CIRCLE, this.settings.innerSize, null, new Color(this.settings.innerColor)
+        );
+        this._symOuter = new SimpleMarkerSymbol(
+          SimpleMarkerSymbol.STYLE_CIRCLE, this.settings.outerSize, null, new Color(this.settings.outerColor)
+        );
+        this.touchLayer = new GraphicsLayer();
+      },
+
+      startup: function() {
+        if (!this.map) {
+          this.destroy();
+          throw new Error('Must provide a map object to use TouchWidget');
+        }
+
+        if (this.map.loaded) {
+          this._init();
+        } else {
+          on.once(this.map, 'load', lang.hitch(this, this._init));
+        }
+      },
+
+      // widget methods
+      _fxArgs: function(graphic) {
+        return {
+          node: graphic.getDojoShape().getNode(),
+          duration: this.delay,
+          easing: easing.expoOut
         };
+      },
 
-        TouchWidget.prototype._fxArgs = function (graphic) {
-            return {
-                node: graphic.getDojoShape().getNode(),
-                duration: this.delay,
-                easing: easing.expoOut
-            };
-        };
+      _fxToCombine: function (graphicOuter, graphicInner) {
+        return [
+          coreFx.fadeOut(this._fxArgs(graphicOuter)),
+          coreFx.fadeOut(this._fxArgs(graphicInner))
+        ];
+      },
 
-        TouchWidget.prototype.startup = function () {
-            var symInner = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, 10,
-                                                  null,
-                                                  new Color([255, 0, 0, 1])),
-                symOuter = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, 42,
-                                                null,
-                                                new Color([255, 0, 0, 0.25])),
-                self = this;
+      _onAspectAfterEnd: function(graphicOuter, graphicInner) {
+        return lang.hitch(this, function() {
+          this.touchLayer.remove(graphicOuter);
+          this.touchLayer.remove(graphicInner);
+        });
+      },
 
-            this.map.on('click', function (e) {
-                var graphicOuter = new Graphic(e.mapPoint, symOuter),
-                    graphicInner = new Graphic(e.mapPoint, symInner);
-                self.touchLayer.add(graphicOuter);
-                self.touchLayer.add(graphicInner);
-                setTimeout(function () {
-                    var f = fx.combine([
-                        coreFx.fadeOut(self._fxArgs(graphicOuter)),
-                        coreFx.fadeOut(self._fxArgs(graphicInner))
-                    ]);
-                    aspect.after(f, 'onEnd', function () {
-                        self.touchLayer.remove(graphicOuter);
-                        self.touchLayer.remove(graphicInner);
-                    });
-                    f.play();
-                }, self.delay);
-            });
-            return this;
-        };
+      _onTimeOut: function(graphicOuter, graphicInner) {
+        return lang.hitch(this, function() {
+          var combined = this._fxToCombine(graphicOuter, graphicInner)
+            , f = fx.combine(combined);
 
-        return TouchWidget;
+          aspect.after(f, 'onEnd', lang.hitch(this, this._onAspectAfterEnd(graphicOuter, graphicInner)));
+          f.play();
+        });
+      },
+
+      _onTouchClick: function(e) {
+        var graphicOuter = new Graphic(e.mapPoint, this._symOuter)
+          , graphicInner = new Graphic(e.mapPoint, this._symInner);
+
+        this.touchLayer.add(graphicOuter);
+        this.touchLayer.add(graphicInner);
+
+        setTimeout(lang.hitch(this, this._onTimeOut(graphicOuter, graphicInner)), this.delay);
+      },
+
+      // private methods
+      _init: function() {
+        this.map.addLayer(this.touchLayer);
+        this.set('loaded', true);
+        this.emit('load', {});
+
+        // set up touch handlers
+        this.own(
+          on(this.get('map'), a11yclick, lang.hitch(this, this._onTouchClick))
+        );
+      }
+
     });
-}).call(this);
+  });
+})(this);
+
