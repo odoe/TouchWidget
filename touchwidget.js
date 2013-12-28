@@ -58,7 +58,7 @@ define([
       if (this.map.loaded) {
         this._init();
       } else {
-        on.once(this.map, 'load', lang.hitch(this, this._init));
+        on.once(this.map, 'load', lang.hitch(this, '_init'));
       }
     },
 
@@ -117,7 +117,7 @@ define([
 
       // set up touch handlers
       this.own(
-        on(this.get('map'), a11yclick, lang.hitch(this, this._onTouchClick))
+        on(this.get('map'), a11yclick, lang.hitch(this, '_onTouchClick'))
       );
     }
 
