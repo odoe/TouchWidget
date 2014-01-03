@@ -7,4 +7,22 @@ One of my gripes is can't always tell when I click on a map. This widget will si
 
 Demo can be seen [here.](http://www.odoe.net/thelab/js/touch/)
 
+Sample config:
+
+````javascript
+{
+  "name": "touch",
+  "path": "widgets/touch/touchwidget",
+  "options": {
+    "settings": {
+      "delay": 500,
+      "innerSize": 10,
+      "innerColor": [255, 0, 0, 1],
+      "outerSize": 42,
+      "outerColor": [255, 0, 0, 0.25]
+    }
+  }
+}
+````
+
 *A work in progress*
