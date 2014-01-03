@@ -78,9 +78,8 @@ define([
       ];
     },
 
-    _onAspectAfterEnd: function(graphicOuter, graphicInner, handle) {
+    _onAspectAfterEnd: function(graphicOuter, graphicInner) {
       return lang.hitch(this, function() {
-        handle.remove();
         this.touchLayer.remove(graphicOuter);
         this.touchLayer.remove(graphicInner);
       });
@@ -89,15 +88,16 @@ define([
     _onTimeOut: function(graphicOuter, graphicInner) {
       return lang.hitch(this, function() {
         var combined
-          , handle
           , f;
         combined = this._fxToCombine(graphicOuter, graphicInner);
         f = fx.combine(combined);
-        handle = aspect.after(f, 'onEnd',
+        this.own(
+        aspect.after(f, 'onEnd',
                      lang.hitch(
                        this,
-                       this._onAspectAfterEnd(graphicOuter, graphicInner, handle)
-                     ));
+                       this._onAspectAfterEnd(graphicOuter, graphicInner)
+                     ))
+        );
         f.play();
       });
     },
