@@ -121,7 +121,7 @@ define([
 
       // set up touch handlers
       this.own(
-        on(this.get('map'), a11yclick, lang.hitch(this, '_onTouchClick'))
+        on(this.get('map'), a11yclick.click, lang.hitch(this, '_onTouchClick'))
       );
     }
 
