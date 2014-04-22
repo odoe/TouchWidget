@@ -1,4 +1,5 @@
 /*global define, describe, it, expect, beforeEach, afterEach, sinon*/
+/*jshint expr:true*/
 define([
   'dojo/on',
   'esri/map',
@@ -12,18 +13,22 @@ define([
 ) {
   'use strict';
 
-  describe(
+  var expect = chai.expect;
+
+  return describe(
     'widgets/touch/touchwidget',
     function() {
 
       var options, widget, map, div;
 
       beforeEach(function() {
+        console.debug('loading');
         div = document.createElement('div');
         document.body.appendChild(div);
         map = new Map(div);
         options = {
-          settings: {}
+          settings: {},
+          map: map
         };
         sinon.stub(on, 'once');
         sinon.spy(map, 'addLayer');
@@ -41,7 +46,7 @@ define([
       it(
         'will be a valid object when created',
         function() {
-          expect(widget).to.be.ok();
+          expect(widget).to.be.ok;
         }
       );
 
@@ -71,7 +76,7 @@ define([
       it(
         'will have its own GraphicsLayer',
         function() {
-          expect(widget.touchLayer).to.be.a(GraphicsLayer);
+          expect(widget.touchLayer).to.be.an.instanceOf(GraphicsLayer);
         }
       );
 
@@ -82,7 +87,7 @@ define([
           it(
             'will throw error when no map provided',
             function() {
-              expect(widget.startup).to.throwError();
+              expect(widget.startup).to.throw(Error);
             }
           );
 
@@ -92,7 +97,7 @@ define([
               options.map = map;
               widget = new TouchWidget(options);
               widget.startup();
-              expect(on.once.calledOnce).to.be.ok();
+              expect(on.once.calledOnce).to.be.ok;
             }
           );
 
@@ -103,11 +108,11 @@ define([
               options.map = map;
               widget = new TouchWidget(options);
               widget.startup();
-              expect(widget.loaded).to.be.ok();
+              expect(widget.loaded).to.be.ok;
               expect(map.addLayer.calledWith(
                 widget.touchLayer
-              )).to.be.ok();
-              expect(TouchWidget.prototype.own.calledOnce).to.be.ok();
+              )).to.be.ok;
+              expect(TouchWidget.prototype.own.calledOnce).to.be.ok;
             }
           );
 
@@ -119,14 +124,13 @@ define([
               widget = new TouchWidget(options);
               sinon.stub(widget, 'emit');
               widget.startup();
-              expect(widget.emit.calledWith('load')).to.be.ok();
+              expect(widget.emit.calledWith('load')).to.be.ok;
               widget.emit.restore();
             }
           );
 
         }
       );
-
     });
 
 });
