@@ -22,7 +22,6 @@ define([
       var options, widget, map, div;
 
       beforeEach(function() {
-        console.debug('loading');
         div = document.createElement('div');
         document.body.appendChild(div);
         map = new Map(div);
