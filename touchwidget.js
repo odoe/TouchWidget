@@ -1,5 +1,3 @@
-/*global define, setTimeout, Error*/
-/*jshint laxcomma:true*/
 define([
   'esri/layers/GraphicsLayer',
   'esri/graphic',
@@ -15,7 +13,7 @@ define([
   'dojo/_base/lang',
   'dijit/_WidgetBase',
   'dijit/a11yclick'
-], function (
+], function(
   GraphicsLayer, Graphic,
   SimpleMarkerSymbol,
   Evented, on,
@@ -71,7 +69,7 @@ define([
       };
     },
 
-    _fxToCombine: function (graphicOuter, graphicInner) {
+    _fxToCombine: function(graphicOuter, graphicInner) {
       return [
         coreFx.fadeOut(this._fxArgs(graphicOuter)),
         coreFx.fadeOut(this._fxArgs(graphicInner))
@@ -87,10 +85,8 @@ define([
 
     _onTimeOut: function(graphicOuter, graphicInner) {
       return lang.hitch(this, function() {
-        var combined
-          , f;
-        combined = this._fxToCombine(graphicOuter, graphicInner);
-        f = fx.combine(combined);
+        var combined = this._fxToCombine(graphicOuter, graphicInner);
+        var f = fx.combine(combined);
         this.own(
         aspect.after(f, 'onEnd',
                      lang.hitch(
@@ -103,8 +99,8 @@ define([
     },
 
     _onTouchClick: function(e) {
-      var graphicOuter = new Graphic(e.mapPoint, this._symOuter)
-        , graphicInner = new Graphic(e.mapPoint, this._symInner);
+      var graphicOuter = new Graphic(e.mapPoint, this._symOuter);
+      var graphicInner = new Graphic(e.mapPoint, this._symInner);
 
       this.touchLayer.add(graphicOuter);
       this.touchLayer.add(graphicInner);
