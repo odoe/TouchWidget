@@ -2,7 +2,6 @@ define([
   'esri/layers/GraphicsLayer',
   'esri/graphic',
   'esri/symbols/SimpleMarkerSymbol',
-  'dojo/Evented',
   'dojo/on',
   'dojo/fx',
   'dojo/_base/fx',
@@ -16,7 +15,7 @@ define([
 ], function(
   GraphicsLayer, Graphic,
   SimpleMarkerSymbol,
-  Evented, on,
+  on,
   fx, coreFx, easing,
   aspect,
   Color,
@@ -26,15 +25,11 @@ define([
 ) {
   'use strict';
 
+  var hitch = lang.hitch;
+
   return declare([_WidgetBase], {
 
-    options: {},
-
-    constructor: function(options) {
-      this.options = options || {};
-      this.settings = this.options.settings;
-
-      this.set('map', this.options.map);
+    postCreate: function() {
       this.set('delay', this.settings.delay || 500);
       this._symInner = new SimpleMarkerSymbol(
         SimpleMarkerSymbol.STYLE_CIRCLE,
@@ -56,7 +51,7 @@ define([
       if (this.map.loaded) {
         this._init();
       } else {
-        on.once(this.map, 'load', lang.hitch(this, '_init'));
+        on.once(this.map, 'load', hitch(this, '_init'));
       }
     },
 
@@ -84,12 +79,12 @@ define([
     },
 
     _onTimeOut: function(graphicOuter, graphicInner) {
-      return lang.hitch(this, function() {
+      return hitch(this, function() {
         var combined = this._fxToCombine(graphicOuter, graphicInner);
         var f = fx.combine(combined);
         this.own(
         aspect.after(f, 'onEnd',
-                     lang.hitch(
+                     hitch(
                        this,
                        this._onAspectAfterEnd(graphicOuter, graphicInner)
                      ))
@@ -105,8 +100,9 @@ define([
       this.touchLayer.add(graphicOuter);
       this.touchLayer.add(graphicInner);
 
-      setTimeout(lang.hitch(this, this._onTimeOut(graphicOuter, graphicInner)),
-                 this.delay);
+      setTimeout(
+        hitch(this, this._onTimeOut(graphicOuter, graphicInner)), this.delay
+      );
     },
 
     // private methods
@@ -117,7 +113,7 @@ define([
 
       // set up touch handlers
       this.own(
-        on(this.get('map'), a11yclick.click, lang.hitch(this, '_onTouchClick'))
+        on(this.get('map'), a11yclick.click, hitch(this, '_onTouchClick'))
       );
     }
 
