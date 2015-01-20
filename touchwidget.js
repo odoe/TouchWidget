@@ -58,7 +58,7 @@ define([
     // widget methods
     _fxArgs: function(graphic) {
       return {
-        node: graphic.getDojoShape().getNode(),
+        node: graphic.getNode(),
         duration: this.delay,
         easing: easing.expoOut
       };
